@@ -1,0 +1,95 @@
+#!/bin/bash
+# File: /usr/lib/zl/copy
+# Description: Copies input (Pipe, File, or String) to the system clipboard.
+# Dependencies: wl-clipboard (Wayland) OR xclip/xsel (X11).
+#
+# Copyright (C) 2026 ZealLab LLC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# Strict Mode
+set -euo pipefail
+
+# -----------------------------------------------------------------------------
+# Core Logic
+# -----------------------------------------------------------------------------
+
+function get_clipboard_command() {
+    # Detects the available and appropriate clipboard utility for the current session.
+
+    # Prioritize Wayland if the session is active and the tool is installed.
+    if [[ -n "${WAYLAND_DISPLAY-}" ]] && command -v wl-copy &> /dev/null; then
+        CMD_ARRAY=(wl-copy)
+        return 0
+    fi
+
+    # Fallback to X11 if the session is active and a tool is installed.
+    if [[ -n "${DISPLAY-}" ]]; then
+        if command -v xclip &> /dev/null; then
+            CMD_ARRAY=(xclip -selection clipboard)
+            return 0
+        elif command -v xsel &> /dev/null; then
+            CMD_ARRAY=(xsel --clipboard --input)
+            return 0
+        fi
+    fi
+
+    # If we reach here, no suitable clipboard utility was found for the current
+    # environment (e.g., running in a TTY without X11/Wayland).
+    return 1
+}
+
+function main() {
+    # 1. Determine the Clipboard Tool
+    # Declare the array variable that the function will populate
+    local -a CMD_ARRAY
+    
+    if ! get_clipboard_command; then
+        echo "Error: Could not find a suitable clipboard utility for the current session." >&2
+        echo "Please ensure you are in a graphical session (Wayland or X11) and that a clipboard tool is installed (e.g., 'wl-clipboard', 'xclip')." >&2
+        exit 1
+    fi
+
+    # 2. Process Input
+    # Case A: Input is from a Pipe (stdin)
+    # [ ! -t 0 ] checks if File Descriptor 0 is NOT a terminal.
+    if [[ ! -t 0 ]]; then
+        cat | "${CMD_ARRAY[@]}"
+
+    # Case B: Input is an Argument
+    elif [[ $# -gt 0 ]]; then
+        local input_arg="$1"
+
+        if [[ -f "$input_arg" ]]; then
+            # Argument is a valid File Path
+            cat "$input_arg" | "${CMD_ARRAY[@]}"
+        else
+            # Argument is a String
+            # We use echo -n to prevent adding an extra newline to the clipboard
+            echo -n "$input_arg" | "${CMD_ARRAY[@]}"
+        fi
+        
+    # Case C: No Input
+    else
+        echo "Usage: zl copy <file_path>" >&2
+        echo "       zl copy <string>" >&2
+        echo "       <command> | zl copy" >&2
+        exit 1
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# Execution
+# -----------------------------------------------------------------------------
+main "$@"

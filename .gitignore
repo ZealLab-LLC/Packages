@@ -1,0 +1,9 @@
+# Debian build artifacts
+*.deb
+*.changes
+*.buildinfo
+*.tar.xz
+*.dsc
+
+# Built repository directory
+/public/

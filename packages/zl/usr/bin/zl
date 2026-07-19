@@ -1,0 +1,109 @@
+#!/bin/bash
+# Description: Main dispatcher for the 'zl' system command suite.
+# Installation: /usr/bin/zl
+#
+# Copyright (C) 2026 ZealLab LLC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+set -euo pipefail
+
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
+readonly SCRIPT_LIB_DIR="/usr/lib/zl"
+
+# -----------------------------------------------------------------------------
+# Helper Functions
+# -----------------------------------------------------------------------------
+
+function show_usage() {
+    echo "Usage: zl <command> [arguments]"
+    echo ""
+    echo "Available commands:"
+    echo ""
+
+    if [[ -d "$SCRIPT_LIB_DIR" ]]; then
+        # Iterate over every executable file in the library
+        for script in "$SCRIPT_LIB_DIR"/*; do
+            if [[ -f "$script" && -x "$script" ]]; then
+
+                # 1. Get the command name (filename without path)
+                local cmd_name
+                cmd_name=$(basename "$script")
+
+                # 2. Extract description
+                # Look for a line starting with "# Description:" (case insensitive)
+                # -m 1: Stop after 1 match
+                # sed: Removes the "# Description:" prefix and leading whitespace
+                local desc
+                desc=$(grep -i -m 1 "^# *Description:" "$script" | sed -E 's/^# *Description: *//i')
+
+                # Fallback if no description found
+                if [[ -z "$desc" ]]; then
+                    desc="(No description provided)"
+                fi
+
+                # 3. Print formatted columns
+                # %-15s adds padding to the command name for alignment
+                printf "  %-15s %s\n" "$cmd_name" "$desc"
+            fi
+        done
+    else
+        echo "  (No commands found in $SCRIPT_LIB_DIR)"
+    fi
+    echo ""
+}
+
+function resolve_script_path() {
+    local cmd_name="$1"
+    local potential_path="${SCRIPT_LIB_DIR}/${cmd_name}"
+
+    if [[ -f "$potential_path" && -x "$potential_path" ]]; then
+        echo "$potential_path"
+        return 0
+    fi
+
+    if [[ -f "${potential_path}.sh" && -x "${potential_path}.sh" ]]; then
+        echo "${potential_path}.sh"
+        return 0
+    fi
+
+    return 1
+}
+
+function main() {
+    if [[ $# -eq 0 ]]; then
+        show_usage
+        exit 1
+    fi
+
+    local sub_command="$1"
+
+    if [[ "$sub_command" == "--help" || "$sub_command" == "-h" ]]; then
+        show_usage
+        exit 0
+    fi
+
+    local target_script
+    if ! target_script=$(resolve_script_path "$sub_command"); then
+        echo "Error: 'zl $sub_command' is not a valid command." >&2
+        exit 127
+    fi
+
+    shift
+    exec "$target_script" "$@"
+}
+
+main "$@"

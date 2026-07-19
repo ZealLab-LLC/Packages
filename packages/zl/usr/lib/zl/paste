@@ -1,0 +1,68 @@
+#!/bin/bash
+# File: /usr/lib/zl/paste
+# Description: Outputs the system clipboard contents to stdout.
+# Dependencies: wl-clipboard (Wayland) OR xclip/xsel (X11).
+#
+# Copyright (C) 2026 ZealLab LLC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# Strict Mode
+set -euo pipefail
+
+# -----------------------------------------------------------------------------
+# Core Logic
+# -----------------------------------------------------------------------------
+
+function get_paste_command() {
+    # Detects the available and appropriate clipboard utility for the current session.
+
+    # Prioritize Wayland if the session is active and the tool is installed.
+    if [[ -n "${WAYLAND_DISPLAY-}" ]] && command -v wl-paste &> /dev/null; then
+        CMD_ARRAY=(wl-paste --no-newline)
+        return 0
+    fi
+
+    # Fallback to X11 if the session is active and a tool is installed.
+    if [[ -n "${DISPLAY-}" ]]; then
+        if command -v xclip &> /dev/null; then
+            CMD_ARRAY=(xclip -selection clipboard -o)
+            return 0
+        elif command -v xsel &> /dev/null; then
+            CMD_ARRAY=(xsel --clipboard --output)
+            return 0
+        fi
+    fi
+
+    # If we reach here, no suitable clipboard utility was found.
+    return 1
+}
+
+function main() {
+    # Declare the array variable that the function will populate
+    local -a CMD_ARRAY
+    
+    if ! get_paste_command; then
+        echo "Error: Could not find a suitable clipboard utility for the current session." >&2
+        echo "Please ensure you are in a graphical session (Wayland or X11) and that a clipboard tool is installed (e.g., 'wl-clipboard', 'xclip')." >&2
+        exit 1
+    fi
+
+    "${CMD_ARRAY[@]}"
+}
+
+# -----------------------------------------------------------------------------
+# Execution
+# -----------------------------------------------------------------------------
+main "$@"

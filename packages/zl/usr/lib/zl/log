@@ -1,0 +1,36 @@
+#!/bin/bash
+# File: /usr/lib/zl/log
+# Description: Filters system journal logs for graphics, audio, and session warnings/errors.
+#
+# Copyright (C) 2026 ZealLab LLC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# Strict Mode
+set -euo pipefail
+
+FOLLOW=""
+if [[ $# -gt 0 ]]; then
+    if [[ "$1" == "-f" || "$1" == "--follow" ]]; then
+        FOLLOW="-f"
+    fi
+fi
+
+# We use grep with --line-buffered to ensure real-time stream output when following logs.
+# We search for terms like vulkan, drm, pipewire, wayland, x11, session, error, fail.
+if [[ -n "$FOLLOW" ]]; then
+    journalctl -b 0 -f | grep --line-buffered -Ei "vulkan|drm|pipewire|wayland|x11|session|error|fail"
+else
+    journalctl -b 0 -e -q | grep -Ei "vulkan|drm|pipewire|wayland|x11|session|error|fail" | tail -n 50
+fi

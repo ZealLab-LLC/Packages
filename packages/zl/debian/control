@@ -1,0 +1,15 @@
+Source: zl
+Section: utils
+Priority: optional
+Maintainer: ZealLab LLC <info@zeallab.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/ZealLab-LLC/Packages
+
+Package: zl
+Architecture: all
+Depends: ${misc:Depends}, bash, wl-clipboard | xclip | xsel
+Description: Command-line utility suite for ZealLabOS
+ A collection of utility scripts for managing and interacting with
+ ZealLabOS, including clipboard sharing.
+
