@@ -16,7 +16,9 @@ rm -f packages/*.deb packages/*.changes packages/*.buildinfo
 # Create output directories
 echo "Creating repository directory structure..."
 mkdir -p "${REPO_DIR}/dists/${CODENAME}/main/binary-all"
-mkdir -p "${REPO_DIR}/dists/${CODENAME}/main/binary-amd64"
+for arch in amd64 i386 arm64 armhf; do
+    mkdir -p "${REPO_DIR}/dists/${CODENAME}/main/binary-${arch}"
+done
 mkdir -p "${REPO_DIR}/pool/main"
 
 # Build all packages in packages/
@@ -24,7 +26,6 @@ echo "Building packages..."
 cd packages/zl
 dpkg-buildpackage -us -uc -b -d
 cd ../..
-
 
 # Move built packages to pool
 echo "Moving built packages to repository pool..."
@@ -39,9 +40,11 @@ cd "${REPO_DIR}"
 apt-ftparchive packages pool/main > dists/${CODENAME}/main/binary-all/Packages
 gzip -k -f -9 dists/${CODENAME}/main/binary-all/Packages
 
-# Duplicate for binary-amd64 compatibility
-cp dists/${CODENAME}/main/binary-all/Packages dists/${CODENAME}/main/binary-amd64/Packages
-gzip -k -f -9 dists/${CODENAME}/main/binary-amd64/Packages
+# Duplicate for compatibility across architectures
+for arch in amd64 i386 arm64 armhf; do
+    cp dists/${CODENAME}/main/binary-all/Packages dists/${CODENAME}/main/binary-${arch}/Packages
+    gzip -k -f -9 dists/${CODENAME}/main/binary-${arch}/Packages
+done
 
 # Generate Release file
 echo "Generating Release file..."
@@ -50,7 +53,7 @@ apt-ftparchive \
   -o APT::FTPArchive::Release::Label="ZealLab" \
   -o APT::FTPArchive::Release::Suite="stable" \
   -o APT::FTPArchive::Release::Codename="${CODENAME}" \
-  -o APT::FTPArchive::Release::Architectures="all amd64" \
+  -o APT::FTPArchive::Release::Architectures="all amd64 i386 arm64 armhf" \
   -o APT::FTPArchive::Release::Components="main" \
   -o APT::FTPArchive::Release::Description="ZealLab OS Packages Repository" \
   release dists/${CODENAME} > dists/${CODENAME}/Release
@@ -74,10 +77,6 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
     echo "Signing Release..."
     gpg --batch --yes --pinentry-mode loopback --passphrase "" --default-key "${KEY_ID}" --clearsign --output dists/${CODENAME}/InRelease dists/${CODENAME}/Release
     gpg --batch --yes --pinentry-mode loopback --passphrase "" --default-key "${KEY_ID}" --detach-sign --armor --output dists/${CODENAME}/Release.gpg dists/${CODENAME}/Release
-
-
-
-
 else
     echo "WARNING: GPG_PRIVATE_KEY is not set. Release files will not be signed."
 fi
