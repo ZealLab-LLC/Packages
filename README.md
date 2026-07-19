@@ -4,7 +4,7 @@ This repository hosts official Debian packages for ZealLab systems. The package 
 
 ## Packages
 
-### `zl`
+### `zl-tools`
 Command-line utility suite for ZealLabOS systems.
 - **Architecture**: `all`
 - **Dependencies**: `bash`, `wl-clipboard | xclip | xsel`
@@ -21,7 +21,7 @@ Command-line utility suite for ZealLabOS systems.
 
 ## Configuration on Debian 13 (Trixie)
 
-Follow the steps below to add this repository and install the `zl` package:
+Follow the steps below to add this repository and install the `zl-tools` package:
 
 1. **Download the GPG repository signing key**:
    ```bash
@@ -43,7 +43,7 @@ Follow the steps below to add this repository and install the `zl` package:
 3. **Update the package lists and install the package**:
    ```bash
    sudo apt-get update
-   sudo apt-get install -y zl
+   sudo apt-get install -y zl-tools
    ```
 
 
