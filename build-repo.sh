@@ -76,6 +76,8 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
     gpg --batch --yes --pinentry-mode loopback --passphrase "" --default-key "${KEY_ID}" --detach-sign --armor --output dists/${CODENAME}/Release.gpg dists/${CODENAME}/Release
 
 
+
+
 else
     echo "WARNING: GPG_PRIVATE_KEY is not set. Release files will not be signed."
 fi
