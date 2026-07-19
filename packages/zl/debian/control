@@ -9,6 +9,9 @@ Homepage: https://github.com/ZealLab-LLC/Packages
 Package: zl-tools
 Architecture: all
 Depends: ${misc:Depends}, bash, wl-clipboard | xclip | xsel
+Replaces: zl
+Conflicts: zl
+Provides: zl
 Description: Command-line utility suite for ZealLabOS
  A collection of utility scripts for managing and interacting with
  ZealLabOS, including clipboard sharing.
