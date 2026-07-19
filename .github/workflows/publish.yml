@@ -28,7 +28,7 @@ jobs:
       - name: Install Debian Packaging and Repository Utilities
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev debhelper apt-utils gpg
+          sudo apt-get install -y dpkg-dev debhelper apt-utils gpg build-essential
 
       - name: Build Packages and Build Repository
         env:

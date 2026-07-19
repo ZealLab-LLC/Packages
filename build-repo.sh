@@ -22,8 +22,9 @@ mkdir -p "${REPO_DIR}/pool/main"
 # Build all packages in packages/
 echo "Building packages..."
 cd packages/zl
-dpkg-buildpackage -us -uc -b
+dpkg-buildpackage -us -uc -b -d
 cd ../..
+
 
 # Move built packages to pool
 echo "Moving built packages to repository pool..."
