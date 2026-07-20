@@ -24,16 +24,8 @@ else
     exit 1
 fi
 
-# Detect Codename (default to trixie if unsupported or not Debian-based)
+# Use trixie as the release suite (all packages are architecture-independent)
 CODENAME="trixie"
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    if [ -n "${VERSION_CODENAME:-}" ]; then
-        CODENAME="$VERSION_CODENAME"
-    elif [ -n "${UBUNTU_CODENAME:-}" ]; then
-        CODENAME="$UBUNTU_CODENAME"
-    fi
-fi
 
 # Write sources list file using deb822 format
 echo "Adding APT source entry for suite: ${CODENAME}..."
