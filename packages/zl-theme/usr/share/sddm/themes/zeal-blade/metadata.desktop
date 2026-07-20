@@ -1,0 +1,15 @@
+[SddmGreeterTheme]
+Name=Zeal Blade
+Description=ZealLab OS login theme
+Author=ZealLab
+Copyright=(c) 2026
+License=GPLv3
+Type=sddm-theme
+Version=2.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Email=support@zeallab.com
+Theme-Id=zeal-blade
+Theme-API=2.0
+QtVersion=6

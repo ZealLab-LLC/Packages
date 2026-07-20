@@ -16,6 +16,11 @@ Command-line utility suite for ZealLabOS systems.
   - `update`: Updates package index and upgrades all system packages.
   - `log`: Filters current boot system journal logs for graphics, audio, and session warnings/errors.
 
+### `zl-theme`
+Custom SDDM theme (zeal-blade) for ZealLabOS.
+- **Architecture**: `all`
+- **Dependencies**: `sddm`
+- **Installation Path**: `/usr/share/sddm/themes/zeal-blade/`
 
 ---
 
@@ -43,7 +48,7 @@ Follow the steps below to add this repository and install the `zl-tools` package
 3. **Update the package lists and install the package**:
    ```bash
    sudo apt-get update
-   sudo apt-get install -y zl-tools
+   sudo apt-get install -y zl-tools zl-theme
    ```
 
 

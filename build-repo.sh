@@ -23,9 +23,15 @@ mkdir -p "${REPO_DIR}/pool/main"
 
 # Build all packages in packages/
 echo "Building packages..."
-cd packages/zl
-dpkg-buildpackage -us -uc -b -d
-cd ../..
+for pkg_dir in packages/*; do
+    if [ -d "$pkg_dir" ] && [ -d "$pkg_dir/debian" ]; then
+        echo "Building $(basename "$pkg_dir")..."
+        cd "$pkg_dir"
+        dpkg-buildpackage -us -uc -b -d
+        cd ../..
+    fi
+done
+
 
 # Move built packages to pool
 echo "Moving built packages to repository pool..."
