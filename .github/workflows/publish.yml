@@ -19,7 +19,7 @@ jobs:
   build-and-deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.outputs != '' && fromJSON(steps.deployment.outputs.outputs).page_url || '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -43,4 +43,8 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: Wandalen/wretry.action@v3.8.0
+        with:
+          action: actions/deploy-pages@v4
+          attempt_limit: 5
+          attempt_delay: 15000
