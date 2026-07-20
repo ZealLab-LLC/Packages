@@ -87,4 +87,9 @@ else
     echo "WARNING: GPG_PRIVATE_KEY is not set. Release files will not be signed."
 fi
 
+# Copy helper setup script to repository root
+echo "Copying repository setup script..."
+cp ../setup.sh .
+
 echo "=== APT Repository Build Complete! ==="
+

@@ -24,9 +24,19 @@ Custom SDDM theme (zeal-blade) for ZealLabOS.
 
 ---
 
-## Configuration on Debian 13 (Trixie)
+## Quick Setup
 
-Follow the steps below to add this repository and install the `zl-tools` package:
+To configure the repository and install the packages automatically on Debian/Ubuntu systems, run the following one-liner:
+
+```bash
+curl -fsSL https://zeallab-llc.github.io/Packages/setup.sh | sudo sh && sudo apt-get install -y zl-tools zl-theme
+```
+
+---
+
+## Manual Configuration (Debian 13 / Trixie)
+
+Follow the steps below to add this repository manually:
 
 1. **Download the GPG repository signing key**:
    ```bash
