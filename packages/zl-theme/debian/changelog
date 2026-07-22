@@ -1,3 +1,9 @@
+zl-theme (1.1.2-1) stable; urgency=medium
+
+  * Fix avatar rendering, QUrl equality logic, and default icon fallback in SDDM theme.
+
+ -- ZealLab LLC <info@zeallab.com>  Wed, 22 Jul 2026 17:48:00 -0400
+
 zl-theme (1.1.1-1) stable; urgency=medium
 
   * Fix user icon role lookup in SDDM theme.

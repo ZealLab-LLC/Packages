@@ -48,12 +48,12 @@ Rectangle {
                     for (var r in roles) {
                         if (roles[r] === "icon") {
                             var ic = userModel.data(idx, Number(r))
-                            if (ic) return ic
+                            if (ic) return String(ic)
                         }
                     }
                 }
-                var ic261 = userModel.data(idx, 261)
-                if (ic261) return ic261
+                var ic260 = userModel.data(idx, 260)
+                if (ic260) return String(ic260)
             }
         } catch (e) {}
         return ""
@@ -61,9 +61,11 @@ Rectangle {
 
     function formatIconUrl(iconPath) {
         if (!iconPath || iconPath === "") return Qt.resolvedUrl("default-user.svg")
-        if (iconPath.indexOf("file://") === 0) return iconPath
-        if (iconPath.indexOf("/") === 0) return "file://" + iconPath
-        return iconPath
+        var str = String(iconPath).trim()
+        if (str === "") return Qt.resolvedUrl("default-user.svg")
+        if (str.indexOf("file://") === 0) return str
+        if (str.indexOf("/") === 0) return "file://" + str
+        return str
     }
 
     LayoutMirroring.enabled: Qt.locale().textDirection === Qt.RightToLeft
@@ -167,16 +169,14 @@ Rectangle {
                 Image {
                     id: avatarImage
                     anchors.fill: parent
-                    anchors.margins: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? 0 : 17 * uiScale
-                    source: formatIconUrl(getUserIcon(userBox.currentIndex))
+                    property string rawIcon: getUserIcon(userBox.currentIndex)
+                    property string resolvedSource: formatIconUrl(rawIcon)
+                    property bool isDefault: !rawIcon || rawIcon === "" || avatarImage.status === Image.Error || String(source).indexOf("default-user.svg") !== -1
+                    anchors.margins: isDefault ? 17 * uiScale : 0
+                    source: (avatarImage.status === Image.Error || !rawIcon) ? Qt.resolvedUrl("default-user.svg") : resolvedSource
                     sourceSize: Qt.size(width, height)
-                    fillMode: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+                    fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                     smooth: true
-                    onStatusChanged: {
-                        if (status === Image.Error) {
-                            source = Qt.resolvedUrl("default-user.svg")
-                        }
-                    }
                 }
             }
 
@@ -226,17 +226,16 @@ Rectangle {
                             color: "#E1E6EB"
                             clip: true
                             Image {
+                                id: delegateAvatar
                                 anchors.fill: parent
-                                anchors.margins: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? 0 : 4 * uiScale
-                                source: formatIconUrl(model.icon)
+                                property string rawIcon: model.icon ? String(model.icon) : ""
+                                property string resolvedSource: formatIconUrl(rawIcon)
+                                property bool isDefault: !rawIcon || rawIcon === "" || delegateAvatar.status === Image.Error || String(source).indexOf("default-user.svg") !== -1
+                                anchors.margins: isDefault ? 4 * uiScale : 0
+                                source: (delegateAvatar.status === Image.Error || !rawIcon) ? Qt.resolvedUrl("default-user.svg") : resolvedSource
                                 sourceSize: Qt.size(width, height)
-                                fillMode: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+                                fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                                 smooth: true
-                                onStatusChanged: {
-                                    if (status === Image.Error) {
-                                        source = Qt.resolvedUrl("default-user.svg")
-                                    }
-                                }
                             }
                         }
                         Text {
