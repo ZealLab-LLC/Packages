@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15 as QQC2
+import QtGraphicalEffects 1.15
 import SddmComponents 2.0
 
 Rectangle {
@@ -156,15 +157,17 @@ Rectangle {
             anchors.margins: 38 * uiScale
             spacing: 12 * uiScale
 
-            Rectangle {
+            Item {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 88 * uiScale
                 Layout.preferredHeight: 88 * uiScale
-                radius: width / 2
-                color: "#E1E6EB"
-                border.width: 3
-                border.color: "#FFFFFF"
-                clip: true
+
+                Rectangle {
+                    id: avatarBg
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#E1E6EB"
+                }
 
                 Image {
                     id: avatarImage
@@ -177,6 +180,28 @@ Rectangle {
                     sourceSize: Qt.size(width, height)
                     fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                     smooth: true
+                    visible: false
+                }
+
+                Rectangle {
+                    id: avatarMask
+                    anchors.fill: parent
+                    radius: width / 2
+                    visible: false
+                }
+
+                OpacityMask {
+                    anchors.fill: avatarImage
+                    source: avatarImage
+                    maskSource: avatarMask
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "transparent"
+                    border.width: 3
+                    border.color: "#FFFFFF"
                 }
             }
 
@@ -219,12 +244,16 @@ Rectangle {
                     highlighted: userBox.highlightedIndex === index
                     contentItem: RowLayout {
                         spacing: 10 * uiScale
-                        Rectangle {
+                        Item {
                             width: 24 * uiScale
                             height: 24 * uiScale
-                            radius: width / 2
-                            color: "#E1E6EB"
-                            clip: true
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: width / 2
+                                color: "#E1E6EB"
+                            }
+
                             Image {
                                 id: delegateAvatar
                                 anchors.fill: parent
@@ -236,6 +265,20 @@ Rectangle {
                                 sourceSize: Qt.size(width, height)
                                 fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                                 smooth: true
+                                visible: false
+                            }
+
+                            Rectangle {
+                                id: delegateAvatarMask
+                                anchors.fill: parent
+                                radius: width / 2
+                                visible: false
+                            }
+
+                            OpacityMask {
+                                anchors.fill: delegateAvatar
+                                source: delegateAvatar
+                                maskSource: delegateAvatarMask
                             }
                         }
                         Text {
