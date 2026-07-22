@@ -7,12 +7,47 @@ overlay='file:///usr/share/zeallab/lockscreen/BrandOverlay.qml'
 case "$1" in
     configure)
         if [ -f "$lockscreen" ] && [ -f /usr/share/zeallab/lockscreen/BrandOverlay.qml ]; then
-            if ! grep -Fq "$overlay" "$lockscreen"; then
-                sed -i \
-                    -e '/^[[:space:]]*DropShadow {$/i\        Loader {\n            id: zealLabBrandOverlay\n            anchors.fill: parent\n            source: "file:///usr/share/zeallab/lockscreen/BrandOverlay.qml"\n            onLoaded: item.panelVisible = Qt.binding(() => lockScreenRoot.uiVisible)\n        }' \
-                    -e 's/visible: .*config\.alwaysShowClock/visible: false/' \
-                    "$lockscreen"
-            fi
+            python3 -c '
+path = "'"$lockscreen"'"
+overlay = "'"$overlay"'"
+with open(path, "r") as f:
+    content = f.read()
+
+lines = content.splitlines()
+new_lines = []
+skip = False
+for line in lines:
+    if "id: zealLabBrandOverlay" in line:
+        if new_lines and "Loader {" in new_lines[-1]:
+            new_lines.pop()
+        skip = True
+        continue
+    if skip:
+        if line.strip() == "}":
+            skip = False
+        continue
+    new_lines.append(line)
+
+content = "\n".join(new_lines) + "\n"
+
+# Remove any extra unclosed dangling Loader { before DropShadow
+content = content.replace("Loader {\n\n        DropShadow", "DropShadow")
+
+target = "DropShadow {"
+if target in content:
+    insertion = """        Loader {
+            id: zealLabBrandOverlay
+            anchors.fill: parent
+            source: "%s"
+            onLoaded: item.panelVisible = Qt.binding(() => lockScreenRoot.uiVisible)
+        }\n        """ % overlay
+    content = content.replace(target, insertion + target, 1)
+
+content = content.replace("visible: !config.alwaysShowClock", "visible: false")
+
+with open(path, "w") as f:
+    f.write(content)
+'
         fi
         ;;
 esac

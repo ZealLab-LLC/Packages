@@ -2,15 +2,36 @@
 set -e
 
 lockscreen=/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml
-overlay='file:///usr/share/zeallab/lockscreen/BrandOverlay.qml'
 
 case "$1" in
     remove|purge)
         if [ -f "$lockscreen" ]; then
-            if grep -Fq "$overlay" "$lockscreen"; then
-                sed -i '/id: zealLabBrandOverlay/,/}/d' "$lockscreen" || true
-                sed -i 's/visible: false/visible: !config.alwaysShowClock/' "$lockscreen" || true
-            fi
+            python3 -c '
+path = "'"$lockscreen"'"
+with open(path, "r") as f:
+    content = f.read()
+
+lines = content.splitlines()
+new_lines = []
+skip = False
+for line in lines:
+    if "id: zealLabBrandOverlay" in line:
+        if new_lines and "Loader {" in new_lines[-1]:
+            new_lines.pop()
+        skip = True
+        continue
+    if skip:
+        if line.strip() == "}":
+            skip = False
+        continue
+    new_lines.append(line)
+
+content = "\n".join(new_lines) + "\n"
+content = content.replace("visible: false", "visible: !config.alwaysShowClock")
+
+with open(path, "w") as f:
+    f.write(content)
+' || true
         fi
         ;;
 esac
