@@ -1,3 +1,9 @@
+zl-theme (1.1.1-1) stable; urgency=medium
+
+  * Fix user icon role lookup in SDDM theme.
+
+ -- ZealLab LLC <info@zeallab.com>  Wed, 22 Jul 2026 17:44:00 -0400
+
 zl-theme (1.1.0-1) stable; urgency=medium
 
   * Include lock screen theme (BrandOverlay and branding assets).

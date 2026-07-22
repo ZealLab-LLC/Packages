@@ -43,8 +43,17 @@ Rectangle {
         try {
             if (userModel.data) {
                 var idx = userModel.index(index, 0)
-                var ic = userModel.data(idx, 260)
-                if (ic) return ic
+                if (userModel.roleNames) {
+                    var roles = userModel.roleNames()
+                    for (var r in roles) {
+                        if (roles[r] === "icon") {
+                            var ic = userModel.data(idx, Number(r))
+                            if (ic) return ic
+                        }
+                    }
+                }
+                var ic261 = userModel.data(idx, 261)
+                if (ic261) return ic261
             }
         } catch (e) {}
         return ""
