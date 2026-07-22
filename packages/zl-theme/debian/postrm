@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+lockscreen=/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml
+overlay='file:///usr/share/zeallab/lockscreen/BrandOverlay.qml'
+
+case "$1" in
+    remove|purge)
+        if [ -f "$lockscreen" ]; then
+            if grep -Fq "$overlay" "$lockscreen"; then
+                sed -i '/id: zealLabBrandOverlay/,/}/d' "$lockscreen" || true
+                sed -i 's/visible: false/visible: !config.alwaysShowClock/' "$lockscreen" || true
+            fi
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+exit 0

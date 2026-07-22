@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+lockscreen=/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml
+overlay='file:///usr/share/zeallab/lockscreen/BrandOverlay.qml'
+
+case "$1" in
+    configure)
+        if [ -f "$lockscreen" ] && [ -f /usr/share/zeallab/lockscreen/BrandOverlay.qml ]; then
+            if ! grep -Fq "$overlay" "$lockscreen"; then
+                sed -i \
+                    -e '/^[[:space:]]*DropShadow {$/i\        Loader {\n            id: zealLabBrandOverlay\n            anchors.fill: parent\n            source: "file:///usr/share/zeallab/lockscreen/BrandOverlay.qml"\n            onLoaded: item.panelVisible = Qt.binding(() => lockScreenRoot.uiVisible)\n        }' \
+                    -e 's/visible: .*config\.alwaysShowClock/visible: false/' \
+                    "$lockscreen"
+            fi
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+exit 0

@@ -17,10 +17,13 @@ Command-line utility suite for ZealLabOS systems.
   - `log`: Filters current boot system journal logs for graphics, audio, and session warnings/errors.
 
 ### `zl-theme`
-Custom SDDM theme (zeal-blade) for ZealLabOS.
+Custom SDDM theme (zeal-blade) and lock screen theme for ZealLabOS.
 - **Architecture**: `all`
 - **Dependencies**: `sddm`
-- **Installation Path**: `/usr/share/sddm/themes/zeal-blade/`
+- **Installation Paths**:
+  - `/usr/share/sddm/themes/zeal-blade/`
+  - `/usr/share/zeallab/lockscreen/`
+  - `/usr/share/zeallab/assets/`
 
 ---
 
