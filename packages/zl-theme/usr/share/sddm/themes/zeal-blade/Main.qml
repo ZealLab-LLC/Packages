@@ -38,6 +38,25 @@ Rectangle {
         sddm.login(userBox.currentText, passwordField.text, sessionBox.currentIndex)
     }
 
+    function getUserIcon(index) {
+        if (index < 0 || !userModel) return ""
+        try {
+            if (userModel.data) {
+                var idx = userModel.index(index, 0)
+                var ic = userModel.data(idx, 260)
+                if (ic) return ic
+            }
+        } catch (e) {}
+        return ""
+    }
+
+    function formatIconUrl(iconPath) {
+        if (!iconPath || iconPath === "") return Qt.resolvedUrl("default-user.svg")
+        if (iconPath.indexOf("file://") === 0) return iconPath
+        if (iconPath.indexOf("/") === 0) return "file://" + iconPath
+        return iconPath
+    }
+
     LayoutMirroring.enabled: Qt.locale().textDirection === Qt.RightToLeft
     LayoutMirroring.childrenInherit: true
 
@@ -134,14 +153,21 @@ Rectangle {
                 color: "#E1E6EB"
                 border.width: 3
                 border.color: "#FFFFFF"
+                clip: true
 
                 Image {
+                    id: avatarImage
                     anchors.fill: parent
-                    anchors.margins: 17 * uiScale
-                    source: Qt.resolvedUrl("default-user.svg")
+                    anchors.margins: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? 0 : 17 * uiScale
+                    source: formatIconUrl(getUserIcon(userBox.currentIndex))
                     sourceSize: Qt.size(width, height)
-                    fillMode: Image.PreserveAspectFit
+                    fillMode: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? Image.PreserveAspectCrop : Image.PreserveAspectFit
                     smooth: true
+                    onStatusChanged: {
+                        if (status === Image.Error) {
+                            source = Qt.resolvedUrl("default-user.svg")
+                        }
+                    }
                 }
             }
 
@@ -178,6 +204,41 @@ Rectangle {
                 textRole: "name"
                 currentIndex: userModel.lastIndex
                 font.pixelSize: 15 * uiScale
+
+                delegate: QQC2.ItemDelegate {
+                    width: userBox.width
+                    highlighted: userBox.highlightedIndex === index
+                    contentItem: RowLayout {
+                        spacing: 10 * uiScale
+                        Rectangle {
+                            width: 24 * uiScale
+                            height: 24 * uiScale
+                            radius: width / 2
+                            color: "#E1E6EB"
+                            clip: true
+                            Image {
+                                anchors.fill: parent
+                                anchors.margins: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? 0 : 4 * uiScale
+                                source: formatIconUrl(model.icon)
+                                sourceSize: Qt.size(width, height)
+                                fillMode: (status === Image.Ready && source != Qt.resolvedUrl("default-user.svg")) ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+                                smooth: true
+                                onStatusChanged: {
+                                    if (status === Image.Error) {
+                                        source = Qt.resolvedUrl("default-user.svg")
+                                    }
+                                }
+                            }
+                        }
+                        Text {
+                            text: model.realName ? (model.realName + " (" + model.name + ")") : model.name
+                            color: textColor
+                            font.pixelSize: 14 * uiScale
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+                }
             }
 
             Text {
