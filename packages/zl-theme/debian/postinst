@@ -2,6 +2,7 @@
 set -e
 
 lockscreen=/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml
+mainblock=/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/MainBlock.qml
 overlay='file:///usr/share/zeallab/lockscreen/BrandOverlay.qml'
 
 case "$1" in
@@ -48,6 +49,86 @@ content = content.replace("visible: !config.alwaysShowClock", "visible: false")
 with open(path, "w") as f:
     f.write(content)
 '
+        fi
+
+        # The prompts (user name, password field, action buttons) are drawn on
+        # top of the white BrandOverlay card, so they need a light palette
+        # instead of the Complementary one Plasma uses over a wallpaper.
+        if [ -f "$mainblock" ]; then
+            python3 - "$mainblock" <<'ZEAL_MAINBLOCK' || true
+import os
+import shutil
+import sys
+
+path = sys.argv[1]
+backup = "/usr/share/zeallab/lockscreen/MainBlock.qml.orig"
+marker = "ZealLab lock screen styling"
+
+root_anchor = "SessionManagementScreen {\n    id: sessionManager\n"
+field_anchor = "        PlasmaExtras.PasswordField {\n            id: passwordBox\n"
+
+root_style = """
+    // ZealLab lock screen styling: dark-on-light palette for the branded card.
+    Kirigami.Theme.inherit: false
+    Kirigami.Theme.colorSet: Kirigami.Theme.Window
+    Kirigami.Theme.backgroundColor: "#F4F6F8"
+    Kirigami.Theme.textColor: "#17202A"
+    Kirigami.Theme.disabledTextColor: "#68717C"
+    Kirigami.Theme.highlightColor: "#1B75BC"
+    Kirigami.Theme.highlightedTextColor: "#FFFFFF"
+"""
+
+field_style = """
+            // ZealLab lock screen styling: white password field, matching the
+            // SDDM login theme (zeal-blade).
+            Kirigami.Theme.inherit: false
+            Kirigami.Theme.colorSet: Kirigami.Theme.View
+            Kirigami.Theme.backgroundColor: "#FFFFFF"
+            Kirigami.Theme.textColor: "#17202A"
+            Kirigami.Theme.disabledTextColor: "#68717C"
+            Kirigami.Theme.highlightColor: "#1B75BC"
+            Kirigami.Theme.highlightedTextColor: "#FFFFFF"
+            color: "#17202A"
+            placeholderTextColor: "#68717C"
+            selectionColor: "#1B75BC"
+            selectedTextColor: "#FFFFFF"
+            topPadding: Kirigami.Units.smallSpacing
+            bottomPadding: Kirigami.Units.smallSpacing
+            leftPadding: (LayoutMirroring.enabled ? passwordBox._rightActionsRow.width : passwordBox._leftActionsRow.width) + Kirigami.Units.smallSpacing * 2
+            rightPadding: (LayoutMirroring.enabled ? passwordBox._leftActionsRow.width : passwordBox._rightActionsRow.width) + Kirigami.Units.smallSpacing * 2
+            background: Rectangle {
+                implicitWidth: Kirigami.Units.gridUnit * 8
+                implicitHeight: Kirigami.Units.gridUnit * 2
+                radius: 5
+                color: "#FFFFFF"
+                border.width: passwordBox.activeFocus ? 2 : 1
+                border.color: passwordBox.activeFocus ? "#00AEEF" : "#BAC2CB"
+            }
+"""
+
+with open(path, "r") as f:
+    content = f.read()
+
+if marker in content:
+    # Already patched: start again from the pristine copy so that repeated
+    # upgrades never stack the styling block twice.
+    if not os.path.isfile(backup):
+        sys.exit(0)
+    with open(backup, "r") as f:
+        content = f.read()
+else:
+    shutil.copy2(path, backup)
+
+if root_anchor not in content or field_anchor not in content:
+    # Unknown Plasma layout; leave the lock screen untouched.
+    sys.exit(0)
+
+content = content.replace(root_anchor, root_anchor + root_style, 1)
+content = content.replace(field_anchor, field_anchor + field_style, 1)
+
+with open(path, "w") as f:
+    f.write(content)
+ZEAL_MAINBLOCK
         fi
         ;;
 esac

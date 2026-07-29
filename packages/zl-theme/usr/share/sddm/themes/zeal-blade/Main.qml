@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15 as QQC2
-import QtGraphicalEffects 1.15
+import Qt5Compat.GraphicalEffects
 import SddmComponents 2.0
 
 Rectangle {
@@ -136,242 +136,294 @@ Rectangle {
 
         Text {
             anchors.right: parent.right
-            text: Qt.formatDate(currentTime, Qt.DefaultLocaleLongDate)
+            text: currentTime.toLocaleDateString(Qt.locale(), Locale.LongFormat)
             color: "#A8B2BE"
             font.pixelSize: 14 * uiScale
         }
     }
 
-    Rectangle {
-        id: loginPanel
+    Item {
+        id: loginCard
         anchors.centerIn: parent
         width: Math.min(430 * uiScale, root.width - 36)
         height: 570 * uiScale
-        color: panelColor
-        radius: 8
-        border.width: 1
-        border.color: "#24FFFFFF"
 
-        ColumnLayout {
+        // Layered translucent rectangles fake a soft drop shadow so the card
+        // reads as raised off the background. Keep in sync with the lock
+        // screen card in /usr/share/zeallab/lockscreen/BrandOverlay.qml.
+        Repeater {
+            model: 6
+
+            Rectangle {
+                readonly property int depth: 6 - index
+                anchors.fill: parent
+                anchors.leftMargin: -depth * 3
+                anchors.rightMargin: -depth * 3
+                anchors.topMargin: -depth
+                anchors.bottomMargin: -depth * 5
+                radius: loginPanel.radius + depth * 3
+                color: "#000000"
+                opacity: 0.05
+            }
+        }
+
+        Rectangle {
+            id: loginPanel
             anchors.fill: parent
-            anchors.margins: 38 * uiScale
-            spacing: 12 * uiScale
+            radius: 14
+            border.width: 1
+            border.color: "#66FFFFFF"
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.lighter(panelColor, 1.04) }
+                GradientStop { position: 0.55; color: panelColor }
+                GradientStop { position: 1.0; color: Qt.darker(panelColor, 1.12) }
+            }
 
-            Item {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: 88 * uiScale
-                Layout.preferredHeight: 88 * uiScale
-
-                Rectangle {
-                    id: avatarBg
-                    anchors.fill: parent
-                    radius: width / 2
-                    color: "#E1E6EB"
-                }
-
-                Image {
-                    id: avatarImage
-                    anchors.fill: parent
-                    property string rawIcon: getUserIcon(userBox.currentIndex)
-                    property string resolvedSource: formatIconUrl(rawIcon)
-                    property bool isDefault: !rawIcon || rawIcon === "" || avatarImage.status === Image.Error || String(source).indexOf("default-user.svg") !== -1
-                    anchors.margins: isDefault ? 17 * uiScale : 0
-                    source: (avatarImage.status === Image.Error || !rawIcon) ? Qt.resolvedUrl("default-user.svg") : resolvedSource
-                    sourceSize: Qt.size(width, height)
-                    fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
-                    smooth: true
-                    visible: false
-                }
-
-                Rectangle {
-                    id: avatarMask
-                    anchors.fill: parent
-                    radius: width / 2
-                    visible: false
-                }
-
-                OpacityMask {
-                    anchors.fill: avatarImage
-                    source: avatarImage
-                    maskSource: avatarMask
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: width / 2
-                    color: "transparent"
-                    border.width: 3
-                    border.color: "#FFFFFF"
+            // Highlight across the top half, fading out before the bottom so
+            // the panel looks convex.
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 1
+                height: parent.height * 0.45
+                radius: parent.radius
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "#CCFFFFFF" }
+                    GradientStop { position: 1.0; color: "#00FFFFFF" }
                 }
             }
 
-            Text {
-                Layout.fillWidth: true
-                text: "Welcome back"
-                color: textColor
-                font.pixelSize: 27 * uiScale
-                font.weight: Font.DemiBold
-                horizontalAlignment: Text.AlignHCenter
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                radius: parent.radius - 1
+                color: "transparent"
+                border.width: 1
+                border.color: "#59FFFFFF"
             }
 
-            Text {
-                Layout.fillWidth: true
-                Layout.bottomMargin: 8 * uiScale
-                text: "Sign in to your workspace"
-                color: mutedColor
-                font.pixelSize: 14 * uiScale
-                horizontalAlignment: Text.AlignHCenter
-            }
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 38 * uiScale
+                spacing: 12 * uiScale
 
-            Text {
-                text: "Account"
-                color: textColor
-                font.pixelSize: 13 * uiScale
-                font.weight: Font.DemiBold
-            }
+                Item {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 88 * uiScale
+                    Layout.preferredHeight: 88 * uiScale
 
-            QQC2.ComboBox {
-                id: userBox
-                Layout.fillWidth: true
-                Layout.preferredHeight: 44 * uiScale
-                model: userModel
-                textRole: "name"
-                currentIndex: userModel.lastIndex
-                font.pixelSize: 15 * uiScale
+                    Rectangle {
+                        id: avatarBg
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: "#E1E6EB"
+                    }
 
-                delegate: QQC2.ItemDelegate {
-                    width: userBox.width
-                    highlighted: userBox.highlightedIndex === index
-                    contentItem: RowLayout {
-                        spacing: 10 * uiScale
-                        Item {
-                            width: 24 * uiScale
-                            height: 24 * uiScale
+                    Image {
+                        id: avatarImage
+                        anchors.fill: parent
+                        property string rawIcon: getUserIcon(userBox.currentIndex)
+                        property string resolvedSource: formatIconUrl(rawIcon)
+                        property bool isDefault: !rawIcon || rawIcon === "" || avatarImage.status === Image.Error || String(source).indexOf("default-user.svg") !== -1
+                        anchors.margins: isDefault ? 17 * uiScale : 0
+                        source: (avatarImage.status === Image.Error || !rawIcon) ? Qt.resolvedUrl("default-user.svg") : resolvedSource
+                        sourceSize: Qt.size(width, height)
+                        fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                        smooth: true
+                        visible: false
+                    }
 
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: width / 2
-                                color: "#E1E6EB"
+                    Rectangle {
+                        id: avatarMask
+                        anchors.fill: parent
+                        radius: width / 2
+                        visible: false
+                    }
+
+                    OpacityMask {
+                        anchors.fill: avatarImage
+                        source: avatarImage
+                        maskSource: avatarMask
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: 3
+                        border.color: "#FFFFFF"
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Welcome back"
+                    color: textColor
+                    font.pixelSize: 27 * uiScale
+                    font.weight: Font.DemiBold
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.bottomMargin: 8 * uiScale
+                    text: "Sign in to your workspace"
+                    color: mutedColor
+                    font.pixelSize: 14 * uiScale
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Text {
+                    text: "Account"
+                    color: textColor
+                    font.pixelSize: 13 * uiScale
+                    font.weight: Font.DemiBold
+                }
+
+                QQC2.ComboBox {
+                    id: userBox
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 44 * uiScale
+                    model: userModel
+                    textRole: "name"
+                    currentIndex: userModel.lastIndex
+                    font.pixelSize: 15 * uiScale
+
+                    delegate: QQC2.ItemDelegate {
+                        width: userBox.width
+                        highlighted: userBox.highlightedIndex === index
+                        contentItem: RowLayout {
+                            spacing: 10 * uiScale
+                            Item {
+                                width: 24 * uiScale
+                                height: 24 * uiScale
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: width / 2
+                                    color: "#E1E6EB"
+                                }
+
+                                Image {
+                                    id: delegateAvatar
+                                    anchors.fill: parent
+                                    property string rawIcon: model.icon ? String(model.icon) : ""
+                                    property string resolvedSource: formatIconUrl(rawIcon)
+                                    property bool isDefault: !rawIcon || rawIcon === "" || delegateAvatar.status === Image.Error || String(source).indexOf("default-user.svg") !== -1
+                                    anchors.margins: isDefault ? 4 * uiScale : 0
+                                    source: (delegateAvatar.status === Image.Error || !rawIcon) ? Qt.resolvedUrl("default-user.svg") : resolvedSource
+                                    sourceSize: Qt.size(width, height)
+                                    fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                                    smooth: true
+                                    visible: false
+                                }
+
+                                Rectangle {
+                                    id: delegateAvatarMask
+                                    anchors.fill: parent
+                                    radius: width / 2
+                                    visible: false
+                                }
+
+                                OpacityMask {
+                                    anchors.fill: delegateAvatar
+                                    source: delegateAvatar
+                                    maskSource: delegateAvatarMask
+                                }
                             }
-
-                            Image {
-                                id: delegateAvatar
-                                anchors.fill: parent
-                                property string rawIcon: model.icon ? String(model.icon) : ""
-                                property string resolvedSource: formatIconUrl(rawIcon)
-                                property bool isDefault: !rawIcon || rawIcon === "" || delegateAvatar.status === Image.Error || String(source).indexOf("default-user.svg") !== -1
-                                anchors.margins: isDefault ? 4 * uiScale : 0
-                                source: (delegateAvatar.status === Image.Error || !rawIcon) ? Qt.resolvedUrl("default-user.svg") : resolvedSource
-                                sourceSize: Qt.size(width, height)
-                                fillMode: isDefault ? Image.PreserveAspectFit : Image.PreserveAspectCrop
-                                smooth: true
-                                visible: false
+                            Text {
+                                text: model.realName ? (model.realName + " (" + model.name + ")") : model.name
+                                color: textColor
+                                font.pixelSize: 14 * uiScale
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
                             }
-
-                            Rectangle {
-                                id: delegateAvatarMask
-                                anchors.fill: parent
-                                radius: width / 2
-                                visible: false
-                            }
-
-                            OpacityMask {
-                                anchors.fill: delegateAvatar
-                                source: delegateAvatar
-                                maskSource: delegateAvatarMask
-                            }
-                        }
-                        Text {
-                            text: model.realName ? (model.realName + " (" + model.name + ")") : model.name
-                            color: textColor
-                            font.pixelSize: 14 * uiScale
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
                         }
                     }
                 }
-            }
 
-            Text {
-                text: "Password"
-                color: textColor
-                font.pixelSize: 13 * uiScale
-                font.weight: Font.DemiBold
-            }
-
-            QQC2.TextField {
-                id: passwordField
-                Layout.fillWidth: true
-                Layout.preferredHeight: 44 * uiScale
-                placeholderText: "Enter password"
-                echoMode: showPassword.checked ? TextInput.Normal : TextInput.Password
-                selectByMouse: true
-                font.pixelSize: 15 * uiScale
-                color: textColor
-                background: Rectangle {
-                    color: "#FFFFFF"
-                    radius: 5
-                    border.width: passwordField.activeFocus ? 2 : 1
-                    border.color: passwordField.activeFocus ? accentColor : "#BAC2CB"
-                }
-                onAccepted: root.submitLogin()
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                QQC2.CheckBox {
-                    id: showPassword
-                    text: "Show password"
-                    font.pixelSize: 12 * uiScale
+                Text {
+                    text: "Password"
+                    color: textColor
+                    font.pixelSize: 13 * uiScale
+                    font.weight: Font.DemiBold
                 }
 
-                Item { Layout.fillWidth: true }
-
-                QQC2.ComboBox {
-                    id: sessionBox
-                    Layout.preferredWidth: 150 * uiScale
-                    Layout.preferredHeight: 36 * uiScale
-                    model: sessionModel
-                    textRole: "name"
-                    currentIndex: sessionModel.lastIndex
-                    font.pixelSize: 12 * uiScale
-                }
-            }
-
-            Text {
-                id: statusText
-                Layout.fillWidth: true
-                Layout.preferredHeight: 20 * uiScale
-                text: ""
-                color: mutedColor
-                font.pixelSize: 12 * uiScale
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
-            }
-
-            QQC2.Button {
-                id: loginButton
-                Layout.fillWidth: true
-                Layout.preferredHeight: 46 * uiScale
-                hoverEnabled: true
-                contentItem: Text {
-                    text: loginButton.enabled ? "Sign in" : "Signing in..."
-                    color: "#FFFFFF"
+                QQC2.TextField {
+                    id: passwordField
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 44 * uiScale
+                    placeholderText: "Enter password"
+                    echoMode: showPassword.checked ? TextInput.Normal : TextInput.Password
+                    selectByMouse: true
                     font.pixelSize: 15 * uiScale
-                    font.bold: true
+                    color: textColor
+                    background: Rectangle {
+                        color: "#FFFFFF"
+                        radius: 5
+                        border.width: passwordField.activeFocus ? 2 : 1
+                        border.color: passwordField.activeFocus ? accentColor : "#BAC2CB"
+                    }
+                    onAccepted: root.submitLogin()
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    QQC2.CheckBox {
+                        id: showPassword
+                        text: "Show password"
+                        font.pixelSize: 12 * uiScale
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    QQC2.ComboBox {
+                        id: sessionBox
+                        Layout.preferredWidth: 150 * uiScale
+                        Layout.preferredHeight: 36 * uiScale
+                        model: sessionModel
+                        textRole: "name"
+                        currentIndex: sessionModel.lastIndex
+                        font.pixelSize: 12 * uiScale
+                    }
+                }
+
+                Text {
+                    id: statusText
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 20 * uiScale
+                    text: ""
+                    color: mutedColor
+                    font.pixelSize: 12 * uiScale
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
                 }
-                background: Rectangle {
-                    color: !loginButton.enabled ? "#8190A0"
-                        : loginButton.down ? Qt.darker(primaryColor, 1.16)
-                        : loginButton.hovered ? Qt.lighter(primaryColor, 1.10)
-                        : primaryColor
-                    radius: 5
+
+                QQC2.Button {
+                    id: loginButton
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 46 * uiScale
+                    hoverEnabled: true
+                    contentItem: Text {
+                        text: loginButton.enabled ? "Sign in" : "Signing in..."
+                        color: "#FFFFFF"
+                        font.pixelSize: 15 * uiScale
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: !loginButton.enabled ? "#8190A0"
+                            : loginButton.down ? Qt.darker(primaryColor, 1.16)
+                            : loginButton.hovered ? Qt.lighter(primaryColor, 1.10)
+                            : primaryColor
+                        radius: 5
+                    }
+                    onClicked: root.submitLogin()
                 }
-                onClicked: root.submitLogin()
             }
         }
     }

@@ -1,3 +1,14 @@
+zl-theme (1.2.0-1) stable; urgency=medium
+
+  * Give the login and lock screen cards a shared raised look (soft shadow,
+    gradient and bevel).
+  * Style the lock screen password field white to match the login theme.
+  * Port the SDDM theme to Qt 6: QtGraphicalEffects is not available to
+    sddm-greeter-qt6, so use Qt5Compat.GraphicalEffects instead.
+  * Use the locale long date format, which Qt 6 dropped from Qt.formatDate.
+
+ -- ZealLab LLC <info@zeallab.com>  Tue, 28 Jul 2026 20:40:00 -0400
+
 zl-theme (1.1.2-1) stable; urgency=medium
 
   * Fix avatar rendering, QUrl equality logic, and default icon fallback in SDDM theme.

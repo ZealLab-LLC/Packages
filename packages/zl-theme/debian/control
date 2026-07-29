@@ -8,7 +8,7 @@ Homepage: https://github.com/ZealLab-LLC/Packages
 
 Package: zl-theme
 Architecture: all
-Depends: ${misc:Depends}, sddm
+Depends: ${misc:Depends}, sddm, qml6-module-qt5compat-graphicaleffects
 Description: SDDM and lock screen themes for ZealLabOS
  This package contains the custom SDDM theme (zeal-blade) and
  lock screen theme (BrandOverlay) designed for ZealLabOS.

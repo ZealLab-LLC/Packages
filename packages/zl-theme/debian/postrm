@@ -2,6 +2,8 @@
 set -e
 
 lockscreen=/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml
+mainblock=/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/MainBlock.qml
+mainblock_backup=/usr/share/zeallab/lockscreen/MainBlock.qml.orig
 
 case "$1" in
     remove|purge)
@@ -33,6 +35,14 @@ with open(path, "w") as f:
     f.write(content)
 ' || true
         fi
+
+        if [ -f "$mainblock_backup" ] && [ -f "$mainblock" ]; then
+            if grep -q "ZealLab lock screen styling" "$mainblock"; then
+                cp -p "$mainblock_backup" "$mainblock" || true
+            fi
+            rm -f "$mainblock_backup"
+        fi
+        rmdir --ignore-fail-on-non-empty /usr/share/zeallab/lockscreen 2>/dev/null || true
         ;;
 esac
 
