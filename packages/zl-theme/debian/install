@@ -1,3 +1,4 @@
+etc/sddm.conf.d/99-zeallab.conf etc/sddm.conf.d/
 usr/share/sddm/themes/zeal-blade usr/share/sddm/themes/
 usr/share/zeallab/lockscreen usr/share/zeallab/
 usr/share/zeallab/assets usr/share/zeallab/
