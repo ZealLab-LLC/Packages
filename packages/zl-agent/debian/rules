@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+# The agent ships as a self-contained Bun executable: a runtime with the
+# application bundle appended to it. Stripping the binary, rewriting its debug
+# sections, or scanning it for shared-library dependencies either corrupts that
+# payload or produces meaningless results, so those steps are disabled.
+override_dh_strip:
+
+override_dh_dwz:
+
+override_dh_shlibdeps:
+
+override_dh_strip_nondeterminism:

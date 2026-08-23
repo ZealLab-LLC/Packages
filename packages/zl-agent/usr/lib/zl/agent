@@ -1,0 +1,63 @@
+#!/bin/bash
+# Description: Local AI coding agent backed by Ollama.
+# Installation: /usr/lib/zl/agent
+#
+# Thin shim invoked by the 'zl' dispatcher as `zl agent [args]`. The agent
+# itself is a self-contained binary installed by this package; nothing is
+# placed on $PATH, so `zl agent` is the only entrypoint.
+#
+# Copyright (C) 2026 ZealLab LLC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+set -euo pipefail
+
+readonly AGENT_BIN="/usr/lib/zl-agent/bin/zl-agent"
+readonly OLLAMA_DEFAULT_HOST="localhost"
+readonly OLLAMA_DEFAULT_PORT="11434"
+
+if [[ ! -x "$AGENT_BIN" ]]; then
+    echo "Error: the ZealLab Agent binary is missing or not executable:" >&2
+    echo "  $AGENT_BIN" >&2
+    echo "Try reinstalling: sudo apt-get install --reinstall zl-agent" >&2
+    exit 127
+fi
+
+# Preflight: the agent only talks to a local Ollama daemon, so a clear message
+# here beats an opaque "no models available" inside the TUI. Uses bash's
+# /dev/tcp so we do not depend on curl being installed.
+function ollama_reachable() {
+    local host="$OLLAMA_DEFAULT_HOST" port="$OLLAMA_DEFAULT_PORT" hostport
+
+    # Honour the same overrides the agent itself reads.
+    hostport="${ZEALLAB_OLLAMA_URL:-${OLLAMA_HOST:-}}"
+    if [[ -n "$hostport" ]]; then
+        hostport="${hostport#http://}"
+        hostport="${hostport#https://}"
+        hostport="${hostport%%/*}"
+        host="${hostport%%:*}"
+        [[ "$hostport" == *:* ]] && port="${hostport##*:}"
+    fi
+
+    timeout 2 bash -c "exec 3<>/dev/tcp/${host}/${port}" 2>/dev/null
+}
+
+if ! ollama_reachable; then
+    echo "Warning: cannot reach the Ollama daemon." >&2
+    echo "  ZealLab Agent runs entirely on local models and needs Ollama running." >&2
+    echo "  Start it with:  systemctl --user start ollama   (or: ollama serve)" >&2
+    echo "" >&2
+fi
+
+exec "$AGENT_BIN" "$@"
