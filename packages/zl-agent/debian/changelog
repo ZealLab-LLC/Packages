@@ -1,3 +1,16 @@
+zl-agent (1.0.1-1) stable; urgency=medium
+
+  * Prompt edge, its bottom stub and the spinner now use the ZealLab brand
+    blue instead of the rotating per-agent colour.
+  * Logo background squares tint toward main_blue rather than the text
+    colour.
+  * "/connect" lists the models the local Ollama daemon actually has,
+    instead of opening the cloud provider authentication dialog.
+  * The models.dev cloud provider catalog is no longer compiled into the
+    binary, so no cloud providers can be offered.
+
+ -- ZealLab LLC <info@zeallab.com>  Sun, 23 Aug 2026 00:34:15 -0400
+
 zl-agent (1.0.0-1) stable; urgency=medium
 
   * Initial release. Adds the "zl agent" subcommand: a local AI coding
