@@ -27,22 +27,39 @@ case "$DEB_ARCH" in
     *) echo "Error: unsupported architecture '$DEB_ARCH' (expected amd64 or arm64)" >&2; exit 2 ;;
 esac
 
-VERSION="$(tr -d '[:space:]' < "${PKG_DIR}/AGENT_VERSION")"
-if [[ -z "$VERSION" ]]; then
-    echo "Error: ${PKG_DIR}/AGENT_VERSION is empty." >&2
+# AGENT_VERSION is either an explicit pin ("1.0.7") or the word "latest", in
+# which case the newest published release is resolved from the GitHub API.
+PINNED="$(tr -d '[:space:]' < "${PKG_DIR}/AGENT_VERSION")"
+if [[ -z "$PINNED" ]]; then
+    echo "Error: ${PKG_DIR}/AGENT_VERSION is empty (expected a version or 'latest')." >&2
     exit 1
 fi
 
-# Guard against the pinned release and the changelog drifting apart, which would
-# ship a binary whose version does not match the package version.
-CHANGELOG_VERSION="$(dpkg-parsechangelog -l "${PKG_DIR}/debian/changelog" -S Version | sed 's/-[^-]*$//')"
-if [[ "$CHANGELOG_VERSION" != "$VERSION" ]]; then
-    echo "Error: version mismatch." >&2
-    echo "  AGENT_VERSION:      ${VERSION}" >&2
-    echo "  debian/changelog:   ${CHANGELOG_VERSION}" >&2
-    echo "Bump both together." >&2
-    exit 1
+if [[ "$PINNED" == "latest" ]]; then
+    VERSION="$(curl -fsSL "https://api.github.com/repos/${AGENT_REPO}/releases/latest" \
+        | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1)"
+    if [[ -z "$VERSION" ]]; then
+        echo "Error: could not resolve the latest ${AGENT_REPO} release." >&2
+        exit 1
+    fi
+    echo "Resolved latest release: ${VERSION}"
+else
+    VERSION="$PINNED"
+    # A pin must agree with the changelog, or the package would claim a version
+    # its binary does not match. When tracking latest, build-repo.sh stamps the
+    # changelog instead, so there is nothing to drift.
+    CHANGELOG_VERSION="$(dpkg-parsechangelog -l "${PKG_DIR}/debian/changelog" -S Version | sed 's/-[^-]*$//')"
+    if [[ "$CHANGELOG_VERSION" != "$VERSION" ]]; then
+        echo "Error: version mismatch." >&2
+        echo "  AGENT_VERSION:      ${VERSION}" >&2
+        echo "  debian/changelog:   ${CHANGELOG_VERSION}" >&2
+        echo "Bump both together, or set AGENT_VERSION to 'latest'." >&2
+        exit 1
+    fi
 fi
+
+# Hand the resolved version to build-repo.sh, which stamps debian/changelog.
+printf '%s\n' "$VERSION" > "${PKG_DIR}/.resolved-version"
 
 readonly ASSET="zl-agent-linux-${ASSET_ARCH}.tar.gz"
 readonly BASE_URL="https://github.com/${AGENT_REPO}/releases/download/v${VERSION}"

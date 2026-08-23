@@ -9,12 +9,14 @@ Homepage: https://github.com/ZealLab-LLC/ZL_Agent
 Package: zl-agent
 Architecture: any
 Depends: ${misc:Depends}, zl-tools
-Description: ZealLab Agent - local AI coding agent for ZealLabOS
- A terminal coding agent that runs entirely against a local Ollama daemon.
+Description: ZealLab Agent - local-only development agent for ZealLabOS
+ A local-only development agent (fork of OpenCode) that runs entirely
+ against a local Ollama daemon.
  No cloud account, no API key, and no outbound network access during normal
  use - you choose from whatever models you have pulled locally.
  .
- Installed as a subcommand of the zl dispatcher and invoked as "zl agent".
+ Installed as a subcommand of the zl dispatcher and invoked as "zl agent"
+ (works only if zl-agent is installed).
  .
  Ollama is expected to be installed and running already; this package does
  not install or manage it.

@@ -14,5 +14,7 @@ Conflicts: zl
 Provides: zl
 Description: Command-line utility suite for ZealLabOS
  A collection of utility scripts for managing and interacting with
- ZealLabOS, including clipboard sharing.
+ ZealLabOS, including clipboard sharing and the zl command dispatcher.
+ Also supports "zl agent" (ZealLab Agent, a fork of OpenCode) when the
+ zl-agent package is installed.
 

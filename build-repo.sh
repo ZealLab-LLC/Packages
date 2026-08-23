@@ -45,6 +45,33 @@ for pkg_dir in packages/*; do
     fi
 done
 
+# apt only offers an upgrade when the package version changes, so tracking the
+# latest agent release still has to move debian/changelog. When AGENT_VERSION is
+# "latest", fetch-agent.sh resolves the release and this stamps a matching entry
+# -- no hand-editing, and a pinned AGENT_VERSION still short-circuits it because
+# the versions already agree. Written with plain shell so the build needs no
+# devscripts/dch.
+stamp_agent_changelog() {
+    local version="$1"
+    local changelog="packages/zl-agent/debian/changelog"
+    local current
+    current="$(dpkg-parsechangelog -l "$changelog" -S Version | sed 's/-[^-]*$//')"
+    if [ "$current" = "$version" ]; then
+        return 0
+    fi
+    echo "Stamping zl-agent changelog: ${current} -> ${version}"
+    local tmp
+    tmp="$(mktemp)"
+    {
+        printf 'zl-agent (%s-1) stable; urgency=medium\n\n' "$version"
+        printf '  * ZealLab Agent %s. Release notes:\n' "$version"
+        printf '    https://github.com/ZealLab-LLC/ZL_Agent/releases/tag/v%s\n\n' "$version"
+        printf ' -- ZealLab LLC <info@zeallab.com>  %s\n\n' "$(date -R)"
+        cat "$changelog"
+    } > "$tmp"
+    mv "$tmp" "$changelog"
+}
+
 # Build zl-agent once per architecture, staging the matching prebuilt binary
 # before each run. Nothing is compiled here, so cross-building with -a is safe.
 if [ "$SKIP_AGENT" = "1" ]; then
@@ -53,6 +80,7 @@ elif [ -d packages/zl-agent/debian ]; then
     for arch in ${AGENT_ARCHES}; do
         echo "Building zl-agent (${arch})..."
         ./fetch-agent.sh "${arch}"
+        stamp_agent_changelog "$(cat packages/zl-agent/.resolved-version)"
         (cd packages/zl-agent && dpkg-buildpackage -us -uc -b -d -a "${arch}")
         rm -f packages/zl-agent/usr/lib/zl-agent/bin/zl-agent
     done

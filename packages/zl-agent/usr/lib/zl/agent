@@ -1,5 +1,5 @@
 #!/bin/bash
-# Description: Local AI coding agent backed by Ollama.
+# Description: ZealLab Agent (fork of OpenCode) - a local-only development agent.
 # Installation: /usr/lib/zl/agent
 #
 # Thin shim invoked by the 'zl' dispatcher as `zl agent [args]`. The agent
