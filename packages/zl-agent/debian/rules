@@ -13,3 +13,11 @@ override_dh_dwz:
 override_dh_shlibdeps:
 
 override_dh_strip_nondeterminism:
+
+# Same reasoning, and it additionally breaks the arm64 build. This package
+# ships no shared libraries -- only usr/lib/zl-agent/bin/zl-agent and the
+# usr/lib/zl/agent shim -- so there are no SONAMEs to record. dh_makeshlibs
+# runs `objdump -p` on the executable anyway; building with `-a arm64` on an
+# amd64 host makes that aarch64-linux-gnu-objdump, which is not installed, so
+# the build dies at exit 25 even though the step had nothing to do.
+override_dh_makeshlibs:
