@@ -1,3 +1,18 @@
+zl-agent (1.0.4-1) stable; urgency=medium
+
+  * Fix an empty model list when OLLAMA_HOST has no port. OLLAMA_HOST=0.0.0.0
+    is the usual way to expose Ollama on the LAN; the agent resolved that to
+    port 80 and found nothing, so no models appeared even though the daemon
+    was running.
+  * Make the local-only defaults apply in the shipped binary. They were set by
+    mutating the environment at startup, which bundling defeated, so the agent
+    could contact models.dev and load a cloud provider catalogue.
+  * Ignore a stale models.dev cache left in ~/.cache/opencode by earlier
+    versions; delete it to reclaim ~4 MB.
+  * Retire "/connect" and remove cloud-provider wording from the interface.
+
+ -- ZealLab LLC <info@zeallab.com>  Sun, 23 Aug 2026 17:20:47 -0400
+
 zl-agent (1.0.1-1) stable; urgency=medium
 
   * Prompt edge, its bottom stub and the spinner now use the ZealLab brand
