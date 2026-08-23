@@ -15,9 +15,10 @@ Command-line utility suite for ZealLabOS systems.
   - `paste`: Outputs system clipboard contents to stdout.
   - `update`: Updates package index and upgrades all system packages.
   - `log`: Filters current boot system journal logs for graphics, audio, and session warnings/errors.
+  - `agent` (`zl agent`): ZealLab Agent (fork of OpenCode), a local-only development agent (works only if `zl-agent` is installed).
 
 ### `zl-agent`
-Local AI coding agent for ZealLabOS, invoked as `zl agent`.
+ZealLab Agent — a local-only AI development agent (fork of OpenCode) for ZealLabOS, invoked as `zl agent` (works only if `zl-agent` is installed).
 - **Architecture**: `amd64`, `arm64`
 - **Dependencies**: `zl-tools`
 - **Subcommand**: `/usr/lib/zl/agent`

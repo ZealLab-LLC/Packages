@@ -1,3 +1,11 @@
+zl-agent (1.0.7-1) stable; urgency=medium
+
+  * Reserve orange and red for warnings and errors. Interactive elements that
+    used them - the permission prompt, the model variant badge, in-progress
+    todo items and agent colours - now use the ZealLab blue.
+
+ -- ZealLab LLC <info@zeallab.com>  Sun, 23 Aug 2026 18:32:08 -0400
+
 zl-agent (1.0.6-1) stable; urgency=medium
 
   * Offer a model picker on first launch when more than one model is pulled.
