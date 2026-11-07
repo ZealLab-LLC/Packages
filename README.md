@@ -105,15 +105,25 @@ The package is then built once per architecture.
 SKIP_AGENT=1 ./build-repo.sh # skip zl-agent, build the rest offline
 ```
 
-### Releasing a new agent version
+### Automatic agent updates
 
-1. Tag [ZL_Agent](https://github.com/ZealLab-LLC/ZL_Agent) (`git tag v1.0.1 && git push origin v1.0.1`);
-   its workflow publishes the Linux binaries.
-2. Here, bump `packages/zl-agent/AGENT_VERSION` **and**
-   `packages/zl-agent/debian/changelog` to the same version, then push.
+[ZL_Agent](https://github.com/ZealLab-LLC/ZL_Agent) publishes a new release after
+its dev checks pass. This repository checks for new Agent releases on a
+15-minute schedule. A scheduled run rebuilds and publishes the signed APT
+repository when either architecture advertises an older Agent version.
+GitHub can delay scheduled runs.
 
-The build fails if those two disagree, so a mismatched package cannot ship.
+`packages/zl-agent/AGENT_VERSION` is set to `latest`. Each publication resolves
+one release version for both architecture builds and stamps the Debian
+changelog automatically. A push to `main` or a manual workflow run also rebuilds
+the repository so changes to other packages are published.
 
-## License
+To pin the Agent, set `AGENT_VERSION` and its Debian changelog to matching
+versions. Pin validation remains active during the build.
 
-All software within this repository is distributed under the GNU General Public License version 3 (GPLv3). Refer to the `LICENSE` file for details.
+After the updated APT index is deployed, clients can install the upgrade:
+
+```bash
+sudo apt update
+sudo apt install --only-upgrade zl-agent
+```

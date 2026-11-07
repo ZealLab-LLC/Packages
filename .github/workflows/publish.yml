@@ -5,18 +5,37 @@ on:
     branches:
       - main
   workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
+  agent-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.agent.outputs.version }}
+      publish: ${{ steps.agent.outputs.publish }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Agent release against the APT index
+        id: agent
+        run: bash check-agent-release.sh
+
   build-and-deploy:
+    needs: agent-release
+    if: needs.agent-release.outputs.publish == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.outputs != '' && fromJSON(steps.deployment.outputs.outputs).page_url || '' }}
@@ -33,6 +52,7 @@ jobs:
       - name: Build Packages and Build Repository
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          ZL_AGENT_VERSION: ${{ needs.agent-release.outputs.version }}
         run: |
           ./build-repo.sh
 

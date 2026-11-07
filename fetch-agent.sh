@@ -36,8 +36,12 @@ if [[ -z "$PINNED" ]]; then
 fi
 
 if [[ "$PINNED" == "latest" ]]; then
-    VERSION="$(curl -fsSL "https://api.github.com/repos/${AGENT_REPO}/releases/latest" \
-        | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1)"
+    # CI resolves latest once so both architecture builds use the same release.
+    VERSION="${ZL_AGENT_VERSION:-}"
+    if [[ -z "$VERSION" ]]; then
+        VERSION="$(curl -fsSL "https://api.github.com/repos/${AGENT_REPO}/releases/latest" \
+            | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1)"
+    fi
     if [[ -z "$VERSION" ]]; then
         echo "Error: could not resolve the latest ${AGENT_REPO} release." >&2
         exit 1
