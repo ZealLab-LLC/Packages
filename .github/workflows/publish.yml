@@ -73,3 +73,22 @@ jobs:
           action: actions/deploy-pages@v4
           attempt_limit: 5
           attempt_delay: 15000
+
+  build-zeallabos:
+    name: Trigger ZealLabOS ISO build
+    needs: build-and-deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Dispatch the ZealLabOS build workflow
+        env:
+          GH_TOKEN: ${{ secrets.ZEALLABOS_DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error::Configure ZEALLABOS_DISPATCH_TOKEN with Actions write access to ZealLab-LLC/ZealLabOS."
+            exit 1
+          fi
+          gh api --method POST repos/ZealLab-LLC/ZealLabOS/actions/workflows/build-iso.yml/dispatches \
+            -f ref=main -f 'inputs[release_dir]=1.0.0' --silent

@@ -131,3 +131,23 @@ After the updated APT index is deployed, clients can install the upgrade:
 sudo apt update
 sudo apt install --only-upgrade zl-agent
 ```
+
+### Automatic ZealLabOS builds
+
+After the APT repository is successfully deployed from `main`, the publish
+workflow dispatches `ZealLab-LLC/ZealLabOS`'s `build-iso.yml` workflow on `main`
+with `release_dir=1.0.0`. This includes pushes to `main` and successful manual
+publications from `main`, including Agent release updates. Failed or skipped
+publications and runs on other branches do not trigger an ISO build.
+
+Configure the `ZEALLABOS_DISPATCH_TOKEN` Actions secret in **this Packages
+repository** with a fine-grained GitHub token limited to
+`ZealLab-LLC/ZealLabOS` and **Actions: read and write** permission. GitHub's
+[workflow dispatch API](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event)
+requires Actions write access. The default `GITHUB_TOKEN` is scoped to Packages
+and cannot dispatch a workflow in ZealLabOS. If the secret is missing, the
+trigger job fails with a setup message; the APT deployment remains published.
+
+The ZealLabOS build workflow already accepts `workflow_dispatch`, so no new
+receiver or scheduled polling is needed. Change the dispatched `release_dir`
+input in `.github/workflows/publish.yml` when the OS release directory changes.
