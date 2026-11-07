@@ -107,11 +107,15 @@ SKIP_AGENT=1 ./build-repo.sh # skip zl-agent, build the rest offline
 
 ### Automatic agent updates
 
-[ZL_Agent](https://github.com/ZealLab-LLC/ZL_Agent) publishes a new release after
-its dev checks pass. This repository checks for new Agent releases on a
-15-minute schedule. A scheduled run rebuilds and publishes the signed APT
-repository when either architecture advertises an older Agent version.
-GitHub can delay scheduled runs.
+[ZL_Agent](https://github.com/ZealLab-LLC/ZL_Agent) dispatches this repository's
+publish workflow after publishing a release, passing the exact Agent version.
+The workflow builds and publishes the signed APT repository when either
+architecture advertises an older version. Duplicate or older dispatches skip
+publication.
+
+The dispatch uses the `PACKAGES_DISPATCH_TOKEN` Actions secret in ZL_Agent,
+containing a fine-grained GitHub token limited to this repository with Actions
+read/write permission. The repository's existing GPG secret signs the APT index.
 
 `packages/zl-agent/AGENT_VERSION` is set to `latest`. Each publication resolves
 one release version for both architecture builds and stamps the Debian

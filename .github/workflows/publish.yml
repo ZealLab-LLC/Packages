@@ -5,8 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
-  schedule:
-    - cron: '7,22,37,52 * * * *'
+    inputs:
+      agent_version:
+        description: Agent release version to publish; leave empty to rebuild latest
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -27,6 +30,8 @@ jobs:
 
       - name: Check Agent release against the APT index
         id: agent
+        env:
+          ZL_AGENT_VERSION: ${{ inputs.agent_version }}
         run: bash check-agent-release.sh
 
   build-and-deploy:

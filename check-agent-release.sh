@@ -4,11 +4,17 @@ set -euo pipefail
 readonly AGENT_REPO="${ZL_AGENT_REPO:-ZealLab-LLC/ZL_Agent}"
 readonly APT_URL="https://zeallab-llc.github.io/Packages"
 pinned=$(tr -d '[:space:]' < packages/zl-agent/AGENT_VERSION)
+requested="${ZL_AGENT_VERSION:-}"
+if [[ -n "$requested" && "$pinned" != latest && "$requested" != "$pinned" ]]; then
+    echo "Requested Agent $requested conflicts with the configured pin $pinned." >&2
+    exit 1
+fi
+selected="${requested:-$pinned}"
 
-if [[ "$pinned" == latest ]]; then
+if [[ "$selected" == latest ]]; then
     release_url="https://api.github.com/repos/$AGENT_REPO/releases/latest"
-elif [[ -n "$pinned" ]]; then
-    release_url="https://api.github.com/repos/$AGENT_REPO/releases/tags/v$pinned"
+elif [[ -n "$selected" ]]; then
+    release_url="https://api.github.com/repos/$AGENT_REPO/releases/tags/v$selected"
 else
     echo "AGENT_VERSION is empty." >&2
     exit 1
@@ -18,8 +24,8 @@ release=$(curl -fsSL --retry 3 "$release_url")
 tag=$(jq -er '.tag_name' <<< "$release")
 version="${tag#v}"
 dpkg --validate-version "$version-1"
-if [[ "$pinned" != latest && "$version" != "$pinned" ]]; then
-    echo "Release $tag does not match the configured version $pinned." >&2
+if [[ "$selected" != latest && "$version" != "$selected" ]]; then
+    echo "Release $tag does not match the requested version $selected." >&2
     exit 1
 fi
 
@@ -31,7 +37,7 @@ jq -e '
 ' <<< "$release" >/dev/null
 
 publish=true
-if [[ "$GITHUB_EVENT_NAME" == schedule ]]; then
+if [[ -n "$requested" ]]; then
     publish=false
     for arch in amd64 arm64; do
         current=$(curl -fsSL --retry 3 "$APT_URL/dists/trixie/main/binary-$arch/Packages" | awk '
