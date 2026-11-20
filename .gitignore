@@ -11,3 +11,7 @@
 # zl-agent binary is fetched from the ZL_Agent repo's releases at build time
 /packages/zl-agent/usr/lib/zl-agent/bin/zl-agent
 packages/zl-agent/.resolved-version
+
+# zl-autodev binary is fetched from this repo's zl-autodev-v* releases at build time
+/packages/zl-autodev/usr/lib/zl-autodev/bin/zl-autodev
+packages/zl-autodev/.resolved-version

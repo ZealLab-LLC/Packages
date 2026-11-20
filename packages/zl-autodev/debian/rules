@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+# The binary is a prebuilt, statically linked and already stripped Go executable
+# fetched by fetch-autodev.sh. Nothing is compiled here, and the package is built
+# for arm64 on an amd64 host with -a, where dh_strip, dh_dwz and dh_makeshlibs
+# would call aarch64 binutils that are not installed. None of them has anything
+# to do for a static binary, so they are disabled (as for zl-agent).
+override_dh_strip:
+
+override_dh_dwz:
+
+override_dh_shlibdeps:
+
+override_dh_makeshlibs:
+
+override_dh_strip_nondeterminism:
+
+# The user service is shipped but not enabled for every account: "zl autodev open"
+# (the desktop launcher) starts it on demand, and users can enable it with
+# systemctl --user enable zl-autodev.
+override_dh_installsystemduser:

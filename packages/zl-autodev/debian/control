@@ -1,0 +1,22 @@
+Source: zl-autodev
+Section: devel
+Priority: optional
+Maintainer: ZealLab LLC <info@zeallab.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: zl-autodev
+Architecture: any
+Depends: ${misc:Depends}, zl-tools, git, cron | cron-daemon
+Recommends: xdg-utils
+Suggests: ollama
+Description: ZealLab AutoDev - scheduled autonomous AI development loops
+ Registers local git repositories for unattended, scheduled development by an
+ AI coding agent. Each run builds one backlog item, runs the project's gates
+ and a review, then commits locally or rolls back. Nothing is ever pushed.
+ .
+ Managed from a local web dashboard (http://localhost:7777) and scheduled
+ through the user's crontab. Invoked as "zl autodev".
+ .
+ Works with Claude Code and the Codex CLI (subscription logins), Ollama and
+ the AntiGravity CLI. Those tools are not installed by this package.

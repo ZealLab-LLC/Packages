@@ -38,6 +38,30 @@ zl agent run "..."       # one-shot, non-interactive
 zl agent models          # list local models
 ```
 
+### `zl-autodev`
+ZealLab AutoDev — schedules AI coding agents to keep developing local git
+repositories, invoked as `zl autodev` (works only if `zl-autodev` is installed).
+- **Architecture**: `amd64`, `arm64`
+- **Dependencies**: `zl-tools`, `git`, `cron`
+- **Subcommand**: `/usr/lib/zl/autodev`
+- **Binary**: `/usr/lib/zl-autodev/bin/zl-autodev`
+- **Desktop**: "ZealLab AutoDev" launcher and icon; user service `zl-autodev.service`
+  (not enabled by default)
+- **License**: proprietary binary (source is private); the shim and packaging are GPL-3.0+
+- **Source**: built in the private ZL_AutoDev repository and released as
+  `zl-autodev-v*` releases of **this** repository; this repo only packages the binary.
+
+Each scheduled run has an agent build one backlog item in a registered repo,
+runs the project's gates and a review, then commits locally or rolls back.
+Nothing is ever pushed. Agents: Claude Code and Codex (subscription logins),
+Ollama, and the AntiGravity CLI, none of which this package installs.
+
+```bash
+zl autodev open                           # start the dashboard (http://localhost:7777) and open it
+systemctl --user enable --now zl-autodev  # keep the dashboard running from login
+zl autodev list                           # registered projects
+```
+
 ### `zl-theme`
 Custom SDDM theme (zeal-blade) and lock screen theme for ZealLabOS.
 - **Architecture**: `all`
@@ -54,7 +78,7 @@ Custom SDDM theme (zeal-blade) and lock screen theme for ZealLabOS.
 To configure the repository and install the packages automatically on Debian/Ubuntu systems, run the following one-liner:
 
 ```bash
-curl -fsSL https://zeallab-llc.github.io/Packages/setup.sh | sudo sh && sudo apt-get install -y zl-tools zl-theme zl-agent
+curl -fsSL https://zeallab-llc.github.io/Packages/setup.sh | sudo sh && sudo apt-get install -y zl-tools zl-theme zl-agent zl-autodev
 ```
 
 ---
@@ -100,9 +124,13 @@ Follow the steps below to add this repository manually:
 SHA-256 against the release's `checksums.txt`, and stages it before packaging.
 The package is then built once per architecture.
 
+`zl-autodev` works the same way through `fetch-autodev.sh`, except that its
+binaries are releases of this repository (see below) and
+`packages/zl-autodev/AUTODEV_VERSION` pins a version or tracks `latest`.
+
 ```bash
-./build-repo.sh              # full build (needs network for the agent)
-SKIP_AGENT=1 ./build-repo.sh # skip zl-agent, build the rest offline
+./build-repo.sh                              # full build (needs network for the agent and AutoDev)
+SKIP_AGENT=1 SKIP_AUTODEV=1 ./build-repo.sh  # skip both, build the rest offline
 ```
 
 ### Automatic agent updates
@@ -131,6 +159,21 @@ After the updated APT index is deployed, clients can install the upgrade:
 sudo apt update
 sudo apt install --only-upgrade zl-agent
 ```
+
+### Automatic AutoDev updates
+
+ZL_AutoDev's source is private, so this public repository never holds a
+credential that can read it. Instead, ZL_AutoDev's release workflow (on a
+`v*` tag) builds the amd64/arm64 binaries and publishes them, with a
+`checksums.txt`, as release `zl-autodev-v<version>` of this repository. It
+then dispatches this repository's publish workflow with `autodev_version`.
+`fetch-autodev.sh` downloads those assets without authentication and verifies
+their checksums, and `build-repo.sh` stamps the changelog as it does for the agent.
+
+That workflow uses the `PACKAGES_RELEASE_TOKEN` Actions secret in ZL_AutoDev: a
+fine-grained token limited to this repository with **Contents** and
+**Actions** read/write. Pushes to `main` and manual runs package the newest
+`zl-autodev-v*` release.
 
 ### Automatic ZealLabOS builds
 

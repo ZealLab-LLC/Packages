@@ -10,10 +10,13 @@ REPO_DIR="public"
 # ships a compiled binary and so is built per-architecture.
 ARCHES="amd64 i386 arm64 armhf"
 AGENT_ARCHES="amd64 arm64"
+AUTODEV_ARCHES="amd64 arm64"
 
 # zl-agent pulls a prebuilt binary from the ZL_Agent repository's releases.
 # Set SKIP_AGENT=1 to build the rest of the repo without network access.
 SKIP_AGENT="${SKIP_AGENT:-0}"
+# zl-autodev pulls a prebuilt binary from this repository's zl-autodev-v* releases.
+SKIP_AUTODEV="${SKIP_AUTODEV:-0}"
 
 echo "=== Starting APT Repository Build ==="
 
@@ -34,10 +37,10 @@ mkdir -p "${REPO_DIR}/pool/main"
 echo "Building packages..."
 for pkg_dir in packages/*; do
     if [ -d "$pkg_dir" ] && [ -d "$pkg_dir/debian" ]; then
-        # zl-agent is architecture-specific and handled separately below.
-        if [ "$(basename "$pkg_dir")" = "zl-agent" ]; then
-            continue
-        fi
+        # zl-agent and zl-autodev are architecture-specific and handled below.
+        case "$(basename "$pkg_dir")" in
+            zl-agent|zl-autodev) continue ;;
+        esac
         echo "Building $(basename "$pkg_dir")..."
         cd "$pkg_dir"
         dpkg-buildpackage -us -uc -b -d
@@ -46,30 +49,35 @@ for pkg_dir in packages/*; do
 done
 
 # apt only offers an upgrade when the package version changes, so tracking the
-# latest agent release still has to move debian/changelog. When AGENT_VERSION is
-# "latest", fetch-agent.sh resolves the release and this stamps a matching entry
-# -- no hand-editing, and a pinned AGENT_VERSION still short-circuits it because
-# the versions already agree. Written with plain shell so the build needs no
-# devscripts/dch.
-stamp_agent_changelog() {
-    local version="$1"
-    local changelog="packages/zl-agent/debian/changelog"
+# latest release of a prebuilt package still has to move debian/changelog. When
+# its version file says "latest", the fetch script resolves the release and this
+# stamps a matching entry -- no hand-editing, and a pinned version still
+# short-circuits it because the versions already agree. Written with plain shell
+# so the build needs no devscripts/dch.
+#   stamp_changelog <package> <version> <title> <release-notes-url>
+stamp_changelog() {
+    local pkg="$1" version="$2" title="$3" url="$4"
+    local changelog="packages/${pkg}/debian/changelog"
     local current
     current="$(dpkg-parsechangelog -l "$changelog" -S Version | sed 's/-[^-]*$//')"
     if [ "$current" = "$version" ]; then
         return 0
     fi
-    echo "Stamping zl-agent changelog: ${current} -> ${version}"
+    echo "Stamping ${pkg} changelog: ${current} -> ${version}"
     local tmp
     tmp="$(mktemp)"
     {
-        printf 'zl-agent (%s-1) stable; urgency=medium\n\n' "$version"
-        printf '  * ZealLab Agent %s. Release notes:\n' "$version"
-        printf '    https://github.com/ZealLab-LLC/ZL_Agent/releases/tag/v%s\n\n' "$version"
+        printf '%s (%s-1) stable; urgency=medium\n\n' "$pkg" "$version"
+        printf '  * %s %s. Release notes:\n' "$title" "$version"
+        printf '    %s\n\n' "$url"
         printf ' -- ZealLab LLC <info@zeallab.com>  %s\n\n' "$(date -R)"
         cat "$changelog"
     } > "$tmp"
     mv "$tmp" "$changelog"
+}
+
+stamp_agent_changelog() {
+    stamp_changelog zl-agent "$1" "ZealLab Agent" "https://github.com/ZealLab-LLC/ZL_Agent/releases/tag/v$1"
 }
 
 # Build zl-agent once per architecture, staging the matching prebuilt binary
@@ -83,6 +91,23 @@ elif [ -d packages/zl-agent/debian ]; then
         stamp_agent_changelog "$(cat packages/zl-agent/.resolved-version)"
         (cd packages/zl-agent && dpkg-buildpackage -us -uc -b -d -a "${arch}")
         rm -f packages/zl-agent/usr/lib/zl-agent/bin/zl-agent
+    done
+fi
+
+# Same for zl-autodev. The first architecture resolves the release; the rest
+# reuse it, so both builds always package the same version.
+if [ "$SKIP_AUTODEV" = "1" ]; then
+    echo "SKIP_AUTODEV=1 - skipping the zl-autodev package."
+elif [ -d packages/zl-autodev/debian ]; then
+    for arch in ${AUTODEV_ARCHES}; do
+        echo "Building zl-autodev (${arch})..."
+        ./fetch-autodev.sh "${arch}"
+        ZL_AUTODEV_VERSION="$(cat packages/zl-autodev/.resolved-version)"
+        export ZL_AUTODEV_VERSION
+        stamp_changelog zl-autodev "$ZL_AUTODEV_VERSION" "ZealLab AutoDev" \
+            "https://github.com/ZealLab-LLC/Packages/releases/tag/zl-autodev-v${ZL_AUTODEV_VERSION}"
+        (cd packages/zl-autodev && dpkg-buildpackage -us -uc -b -d -a "${arch}")
+        rm -f packages/zl-autodev/usr/lib/zl-autodev/bin/zl-autodev
     done
 fi
 

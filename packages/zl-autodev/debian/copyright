@@ -1,0 +1,38 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: zl-autodev
+
+Files: debian/*
+       usr/lib/zl/autodev
+       usr/lib/systemd/user/zl-autodev.service
+       usr/share/applications/zl-autodev.desktop
+Copyright: 2026 ZealLab LLC <info@zeallab.com>
+License: GPL-3.0+
+
+Files: usr/lib/zl-autodev/bin/zl-autodev
+       usr/share/icons/hicolor/scalable/apps/zl-autodev.svg
+Copyright: 2026 ZealLab LLC <info@zeallab.com>
+License: proprietary
+Comment: ZealLab AutoDev is developed in a private repository; this package ships
+ its prebuilt binary. The binary embeds htmx (https://htmx.org), which is
+ distributed under the Zero-Clause BSD license (0BSD).
+
+License: proprietary
+ Copyright (C) 2026 ZealLab LLC. All rights reserved.
+ .
+ You may install and use this software free of charge. You may not modify,
+ reverse engineer, or redistribute it, except as part of an unmodified copy of
+ the ZealLab APT repository or ZealLabOS, without prior written permission from
+ ZealLab LLC.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED. IN NO EVENT SHALL ZEALLAB LLC BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+License: GPL-3.0+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 3 can be found in "/usr/share/common-licenses/GPL-3".

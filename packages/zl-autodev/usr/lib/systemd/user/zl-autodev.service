@@ -1,0 +1,11 @@
+[Unit]
+Description=ZealLab AutoDev dashboard (http://localhost:7777)
+Documentation=https://zeallab-llc.github.io/Packages/
+
+[Service]
+ExecStart=/usr/lib/zl-autodev/bin/zl-autodev serve -addr localhost:7777
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=ZealLab AutoDev
+GenericName=Autonomous Development
+Comment=Schedule AI agents to keep improving your projects
+Exec=zl autodev open
+Icon=zl-autodev
+Terminal=false
+Categories=Development;IDE;
+Keywords=AI;agent;cron;autonomous;development;
+StartupNotify=false

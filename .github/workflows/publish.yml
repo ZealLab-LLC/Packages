@@ -10,6 +10,10 @@ on:
         description: Agent release version to publish; leave empty to rebuild latest
         type: string
         required: false
+      autodev_version:
+        description: AutoDev release version to publish (dispatched by ZL_AutoDev's release workflow); leave empty for latest
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -52,12 +56,14 @@ jobs:
       - name: Install Debian Packaging and Repository Utilities
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev debhelper apt-utils gpg build-essential
+          sudo apt-get install -y dpkg-dev debhelper apt-utils gpg build-essential jq
 
       - name: Build Packages and Build Repository
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           ZL_AGENT_VERSION: ${{ needs.agent-release.outputs.version }}
+          ZL_AUTODEV_VERSION: ${{ inputs.autodev_version }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           ./build-repo.sh
 

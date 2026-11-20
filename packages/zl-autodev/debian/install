@@ -1,0 +1,5 @@
+usr/lib/zl/autodev usr/lib/zl/
+usr/lib/zl-autodev/bin/zl-autodev usr/lib/zl-autodev/bin/
+usr/lib/systemd/user/zl-autodev.service usr/lib/systemd/user/
+usr/share/applications/zl-autodev.desktop usr/share/applications/
+usr/share/icons/hicolor/scalable/apps/zl-autodev.svg usr/share/icons/hicolor/scalable/apps/

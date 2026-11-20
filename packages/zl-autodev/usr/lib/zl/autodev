@@ -1,0 +1,81 @@
+#!/bin/bash
+# Description: ZealLab AutoDev - schedule AI agents to keep developing your projects.
+# Installation: /usr/lib/zl/autodev
+#
+# Thin shim invoked by the 'zl' dispatcher as `zl autodev [args]`. The program is
+# a self-contained binary installed by this package; nothing is placed on $PATH.
+# Cron jobs created by the dashboard call the binary by its full path.
+#
+# Copyright (C) 2026 ZealLab LLC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+set -euo pipefail
+
+readonly AUTODEV_BIN="/usr/lib/zl-autodev/bin/zl-autodev"
+readonly DASHBOARD_PORT="7777"
+readonly DASHBOARD_URL="http://localhost:${DASHBOARD_PORT}"
+
+if [[ ! -x "$AUTODEV_BIN" ]]; then
+    echo "Error: the ZealLab AutoDev binary is missing or not executable:" >&2
+    echo "  $AUTODEV_BIN" >&2
+    echo "Try reinstalling: sudo apt-get install --reinstall zl-autodev" >&2
+    exit 127
+fi
+
+function show_usage() {
+    echo "Usage: zl autodev <command>"
+    echo ""
+    echo "  open        start the dashboard if needed and open it in the browser"
+    echo "  serve       run the dashboard in the foreground (${DASHBOARD_URL})"
+    echo "  run <id>    run one iteration of a registered project now"
+    echo "  list        list registered projects"
+    echo "  version     print the version"
+    echo ""
+    echo "Keep the dashboard running in the background:"
+    echo "  systemctl --user enable --now zl-autodev"
+}
+
+# Uses bash's /dev/tcp so we do not depend on curl being installed.
+function dashboard_up() {
+    timeout 1 bash -c "exec 3<>/dev/tcp/127.0.0.1/${DASHBOARD_PORT}" 2>/dev/null
+}
+
+function open_dashboard() {
+    if ! dashboard_up; then
+        # Prefer the user service; without a systemd user session, run it detached.
+        if ! systemctl --user start zl-autodev.service 2>/dev/null; then
+            setsid "$AUTODEV_BIN" serve -addr "localhost:${DASHBOARD_PORT}" </dev/null >/dev/null 2>&1 &
+        fi
+        for _ in $(seq 50); do
+            dashboard_up && break
+            sleep 0.1
+        done
+    fi
+    if ! dashboard_up; then
+        echo "Error: the dashboard did not start. See: journalctl --user -u zl-autodev" >&2
+        exit 1
+    fi
+    if command -v xdg-open >/dev/null 2>&1 && [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
+        xdg-open "$DASHBOARD_URL" >/dev/null 2>&1 &
+    else
+        echo "Dashboard: ${DASHBOARD_URL}"
+    fi
+}
+
+case "${1:-}" in
+    "" | -h | --help | help) show_usage ;;
+    open) open_dashboard ;;
+    *) exec "$AUTODEV_BIN" "$@" ;;
+esac

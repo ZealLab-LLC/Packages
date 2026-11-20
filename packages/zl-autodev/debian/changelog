@@ -1,0 +1,7 @@
+zl-autodev (0.1.0-1) stable; urgency=medium
+
+  * Initial release: ZealLab AutoDev dashboard, scheduled iterations through
+    the user's crontab, and Claude Code, Codex, Ollama and AntiGravity
+    providers.
+
+ -- ZealLab LLC <info@zeallab.com>  Fri, 20 Nov 2026 15:17:25 -0500
