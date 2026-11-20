@@ -39,7 +39,10 @@ if [[ "$PINNED" == "latest" ]]; then
     # CI resolves latest once so both architecture builds use the same release.
     VERSION="${ZL_AGENT_VERSION:-}"
     if [[ -z "$VERSION" ]]; then
-        VERSION="$(curl -fsSL "https://api.github.com/repos/${AGENT_REPO}/releases/latest" \
+        # Authenticated when possible: anonymous API calls are rate-limited per runner IP.
+        auth=()
+        [[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+        VERSION="$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/${AGENT_REPO}/releases/latest" \
             | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1)"
     fi
     if [[ -z "$VERSION" ]]; then

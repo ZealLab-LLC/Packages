@@ -20,7 +20,11 @@ else
     exit 1
 fi
 
-release=$(curl -fsSL --retry 3 "$release_url")
+# Authenticate when a token is available: unauthenticated API calls share the
+# runner IP's rate limit and fail with 403 on busy GitHub-hosted runners.
+auth=()
+[[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+release=$(curl -fsSL --retry 3 "${auth[@]}" "$release_url")
 tag=$(jq -er '.tag_name' <<< "$release")
 version="${tag#v}"
 dpkg --validate-version "$version-1"

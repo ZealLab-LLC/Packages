@@ -36,6 +36,7 @@ jobs:
         id: agent
         env:
           ZL_AGENT_VERSION: ${{ inputs.agent_version }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: bash check-agent-release.sh
 
   build-and-deploy:
